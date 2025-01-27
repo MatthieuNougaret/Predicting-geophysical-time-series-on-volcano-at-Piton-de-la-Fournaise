@@ -124,6 +124,26 @@ def main(args):
 #=============================================================================
 
 def compute_compile(results, models, metrics):
+    """
+    Function to make a summary of the n-th runs of the models.
+
+    Parameters
+    ----------
+    results : numpy.ndarray
+        3d array of float. Consists of metric score of the models for test
+        and valid datasets. 
+    models : numpy.ndarray
+        1d vector of string. List of the tested models/methods.
+    metrics : numpy.ndarray
+        1d vector of string. List of the metrics computed.
+
+    Returns
+    -------
+    df_compile : pandas.DataFrame
+        Data Frame with minimum, median average, maximum and deviation of
+        the metrics for the models over the n-th initializations.
+
+    """
     df_compile = {}
     df_compile['models'] = models
     for i in range(len(metrics)):
@@ -144,20 +164,38 @@ def plot_bar(args, df_compile, metric_name, save_path, figsize=(3.22, 3.22),
              dpi=200, ylabel=None, xlims=None, ylims=None,
              limit_proportion=0.02, model_names=None):
     """
-    Function to plot median of a metric
+    Function to plot median of a metric with bar plot.
 
     Parameters
     ----------
+    args : dict
+        Dictionary with init file informations.
     df_compile : pandas.DataFrame
+        Data Frame with minimum, median average, maximum and deviation of
+        the metrics for the models over the n-th initializations.
     metric_name : string
+        Name of the metric to plot.
     save_path : string or Pathlib.Path
-    figsize : tuple
-    dpi : integer
-    ylabel : string or None
-    xlims : tuple or None
-    ylims : tuple or None
-    limit_proportion : floating
-    model_names : tuple or None
+        Where to save the figure.
+    figsize : tuple, optional
+        Size of the figure in inches. The default is (3.22, 3.22).
+    dpi : integer, optional
+        Dots per inches. The default is 200.
+    ylabel : string or None, optional
+        Y-label string. The default is None.
+    xlims : tuple or None, optional
+        Lower and upper limit of x-axis. The default is None.
+    ylims : tuple or None, optional
+        Lower and upper limit of y-axis. The default is None.
+    limit_proportion : floating, optional
+        Width proportion for x and y-axis. The default is 0.02.
+    model_names : tuple or None, optional
+        1d vector listing the model's name. The default is None.
+
+    Returns
+    -------
+    None.
+
     """
     data = df_compile[metric_name].to_numpy().astype(float)
     if type(model_names) == type(None):
@@ -187,14 +225,51 @@ def plot_bar(args, df_compile, metric_name, save_path, figsize=(3.22, 3.22),
     plt.xlim(xlims[0], xlims[1])
     plt.ylim(ylims[0], ylims[1])
 
-    plt.savefig(str(save_path)+'/'+args['DATASET']+'_'+metric_name+'.png', bbox_inches='tight')
+    plt.savefig(str(save_path)+'/'+args['DATASET']+'_'+metric_name+'.png',
+                bbox_inches='tight')
+
     plt.close()
     plt.show()
 
 def plot_R2_vs_time(args, df_compile, path, figsize=(3.22, 3.22), dpi=200,
                     tick_sz=12, label_sz=12, xlims=None, ylims=None,
                     limit_proportion=0.02, xticks_freq=None, xticks_start=0):
+    """
+    Function to plot median of a metric
 
+    Parameters
+    ----------
+    args : dict
+        Dictionary with init file informations
+    df_compile : pandas.DataFrame
+        Data Frame with minimum, median average, maximum and deviation of
+    	the metrics for the models over the n-th initializations.
+    path : string or Pathlib.Path
+        Where to save the figure.
+    figsize : tuple, optional
+        Size of the figure in inches. The default is (3.22, 3.22).
+    dpi : integer, optional
+        Dots per inches. The default is 200.
+    tick_sz : float, optional
+        . The default is 12.
+    label_sz : float, optional
+        . The default is 12.
+    xlims : tuple or None, optional
+        Lower and upper limit of x-axis. The default is None.
+    ylims : tuple or None, optional
+        Lower and upper limit of y-axis. The default is None.
+    limit_proportion : floating, optional
+        Width proportion for x and y-axis. The default is 0.02.
+    xticks_freq : int, optional
+        Frequency of the sampling for the x-axis. The default is None.
+    xticks_start : int, optional
+        Index at which the sampling start. The default is 0.
+
+    Returns
+    -------
+    None.
+
+    """
     models_nm = np.array(list(df_compile['models']))
     col_l = list(df_compile.columns)
     using = []
@@ -244,10 +319,8 @@ def plot_R2_vs_time(args, df_compile, path, figsize=(3.22, 3.22), dpi=200,
     plt.close()
     plt.show()
 
-def plot_R2_vs_features(args, df_compile, path, figsize=(3.22, 3.22),
-                        dpi=200, 
-                        delta_p=0.2,
-                        ylabel=None, xlims=None, ylims=None,
+def plot_R2_vs_features(args, df_compile, path, figsize=(3.22, 3.22), dpi=200,
+                        delta_p=0.2, ylabel=None, xlims=None, ylims=None,
                         limit_proportion=0.02, model_names=None,
                         x_ticks=None):
     """
@@ -256,17 +329,34 @@ def plot_R2_vs_features(args, df_compile, path, figsize=(3.22, 3.22),
     Parameters
     ----------
     args : dict
+        Dictionary with init file informations
     df_compile : pandas.DataFrame
-    path : string or Pathlib.Path
-    figsize : tuple
-    dpi : integer
-    ylabel : string or None
-    xlims : tuple or None
-    ylims : tuple or None
-    limit_proportion : floating
-    model_names : tuple or None
-    """
+        Data Frame with minimum, median average, maximum and deviation of
+    	the metrics for the models over the n-th initializations.
+    path : str or Pathlib.Path
+        Where to save the figure.
+    figsize : tuple, optional
+        Size of the figure in inches. The default is (3.22, 3.22).
+    dpi : int, optional
+        Dots per inches. The default is 200.
+    ylabel : string or None, optional
+        Y-label string. The default is None.
+    xlims : tuple or None, optional
+        Lower and upper limit of x-axis. The default is None.
+    ylims : tuple or None, optional
+        Lower and upper limit of y-axis. The default is None.
+    limit_proportion : floating, optional
+        Width proportion for x and y-axis. The default is 0.02.
+    model_names : tuple or None, optional
+        1d vector listing the model's name. The default is None.
+    x_ticks : None or list-like iterable
+        1d vector listing the ticks of x-axis. The default is None.
 
+    Returns
+    -------
+    None.
+
+    """
     models_nm = np.array(list(df_compile['models']))
     col_l = list(df_compile.columns)
     using = []

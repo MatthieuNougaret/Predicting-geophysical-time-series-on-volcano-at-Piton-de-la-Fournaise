@@ -75,6 +75,8 @@ def make_gradients(dataf, windows, target, adding=''):
         Length of the moving windows.
     target : str
         Column name on which you want to compute the rolling gradients.
+    adding : str, optional
+        Text to add to the created columns. The default is ''.
 
     Returns
     -------
@@ -147,8 +149,33 @@ def load_and_preprocess_data(data_path):
 
     return df, date_time
 
-def split_data(df, date_time, OUTPUT_PATH, generate_figure=True):
-    """Splits the data into training, validation, and test sets."""
+def split_data(df, date_time, output_path, generate_figure=True):
+    """
+    Splits the data into training, validation, and test sets.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataset with the features.
+    date_time : numpy.ndarray
+         1d vector of 'datetime64[h]'. Time of recordings of the reccords.
+    output_path : pathlib.Path
+        Where to save the the figure.
+    generate_figure : bool, optional
+        If the repartition figure is plot. The default is True.
+
+    Returns
+    -------
+    train_df : pandas.DataFrame
+        Training dataset with the features.
+    valid_df : pandas.DataFrame
+        Validation dataset with the features.
+    test_df : pandas.DataFrame
+        Testing dataset with the features.
+    split_infos : dict
+        Dictionary with informations on how the dataset is splitted.
+
+    """
     split_infos = {}
 
     valid_fraction, test_fraction = 0.15, 0.15
@@ -195,7 +222,7 @@ def split_data(df, date_time, OUTPUT_PATH, generate_figure=True):
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)
         plt.legend(title='Datasets', fontsize=16, title_fontsize=16)
-        plt.savefig(OUTPUT_PATH / 'sets_repartition.png', bbox_inches='tight')
+        plt.savefig(output_path / 'sets_repartition.png', bbox_inches='tight')
 
     plt.close()
     plt.show()
@@ -204,7 +231,20 @@ def split_data(df, date_time, OUTPUT_PATH, generate_figure=True):
 
 
 def standardize_data(train_df, valid_df, test_df):
-    """Standardizes datasets using train mean and std deviation."""
+    """
+    Standardizes gnss datasets using train mean and standard deviation.
+
+    Parameters
+    ----------
+    train_df : pandas.DataFrame
+        Training dataset without standardization.
+
+    Returns
+    -------
+    train_df : pandas.DataFrame
+        Standardized training dataset.
+
+    """
     train_mean, train_std = train_df.mean(), train_df.std()
 
     valid_df = (valid_df - train_mean) / train_std
@@ -215,18 +255,27 @@ def standardize_data(train_df, valid_df, test_df):
 
 def create_dataset(df, input_width, out_steps, shuffle=False, threshold=None):
     """
-    Creates time series dataset for training/validation/testing with optional filtering 
-    based on a spike threshold.
-    
-    Parameters:
-    - df: pandas DataFrame, time series data
-    - input_width: int, number of input time steps in each sequence
-    - out_steps: int, number of output time steps to predict
-    - threshold: float, optional threshold to filter sequences that contain spikes
-    
-    Returns:
-    - X: numpy array of shape (filtered_num_sequences, input_width), input sequences
-    - y: numpy array of shape (filtered_num_sequences, out_steps), target sequences
+    Creates a time series dataset for training, validation, or testing with
+    optional filtering based on a spike threshold.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        The time series data to be used for creating the dataset.
+    input_width : int
+        Number of input time steps in each sequence.
+    out_steps : int
+        Number of output time steps to predict.
+    threshold : float, optional
+        A threshold value to filter out sequences that contain spikes.
+
+    Returns
+    -------
+    X : numpy.ndarray
+        Input sequences with shape (filtered_num_sequences, input_width).
+    y : numpy.ndarray
+        Target sequences with shape (filtered_num_sequences, out_steps).
+
     """
     # Set appropriate dtype based on the length of df
     dtype = 'int32' if len(df) < 2147483646 else 'int64'
@@ -257,18 +306,52 @@ def create_dataset(df, input_width, out_steps, shuffle=False, threshold=None):
 # Model functions
 #=============================================================================
 
-def evaluate_models(X_train, y_train, X_valid, y_valid, X_test, y_test, args, to_out, output_path):
-    """Evaluates models and saves training history."""
+def evaluate_models(X_train, y_train, X_valid, y_valid, X_test, y_test, args,
+                    to_out, output_path):
+    """
+    Function to evaluates models and saves training history.
+
+    Parameters
+    ----------
+    X_train : numpy.ndarray
+        3d tensor of the training dataset input.
+    y_train : numpy.ndarray
+        3d tensor of the training dataset output.
+    X_valid : numpy.ndarray
+        3d tensor of the validation dataset input.
+    y_valid : numpy.ndarray
+        3d tensor of the validation dataset output.
+    X_test : numpy.ndarray
+        3d tensor of the testing dataset input.
+    y_test : numpy.ndarray
+        3d tensor of the testing dataset output.
+    args : dict
+        Dictionary with init file informations.
+    to_out : numpy.ndarray
+        1d vector with all the features.
+    output_path : pathlib.Path
+        Where to save the models.
+
+    Returns
+    -------
+    performance_df : pandas.DataFrame
+        Data Frame with the models score results.
+
+    """
     num_features = len(to_out)
-    performance_df = pd.DataFrame(['Last', 'Linear', 'Dense', 'Conv', 'LSTM', 'Transformer'], columns=["Model"])
+    performance_df = pd.DataFrame(['Last', 'Linear', 'Dense', 'Conv', 'LSTM',
+                                   'Transformer'], columns=["Model"])
+
     performance_df['Valid_MSE'], performance_df['Valid_MAE'] = 0.0, 0.0
     performance_df['Test_MSE'], performance_df['Test_MAE'] = 0.0, 0.0
     performance_df['Valid_R2'], performance_df['Test_R2'] = 0.0, 0.0
     for i in range(num_features):
-        performance_df['Valid_R2_'+to_out[i]], performance_df['Test_R2_'+to_out[i]] = 0.0, 0.0
+        performance_df['Valid_R2_'+to_out[i]] = 0.0
+        performance_df['Test_R2_'+to_out[i]] = 0.0
 
     for i in range(args['OUT_STEPS']):
-        performance_df['Valid_R2_t+'+str(i+1)], performance_df['Test_R2_t+'+str(i+1)] = 0.0, 0.0
+        performance_df['Valid_R2_t+'+str(i+1)] = 0.0
+        performance_df['Test_R2_t+'+str(i+1)] = 0.0
 
     # Define models
     models = {
@@ -340,17 +423,60 @@ def evaluate_models(X_train, y_train, X_valid, y_valid, X_test, y_test, args, to
 
 class Baseline(tf.keras.Model):
     """
-    Repeat the last seen value
+    Build Last method. It repeat the last seen value.
     """
 
     def __init__(self, OUT_STEPS):
+        """
+        Initialise Last method.
+
+        Parameters
+        ----------
+        OUT_STEPS : int
+            Number of times the last value is repeated.
+
+        Returns
+        -------
+        None
+
+        """
         super(Baseline, self).__init__()
         self.OUT_STEPS = OUT_STEPS
     
     def call(self, inputs):
+        """
+        Prediction method.
+
+        Parameters
+        ----------
+        inputs : numpy.ndarray
+            3d tensor, inpunt data.
+
+        Returns
+        -------
+        tf.tile
+            Model prediction.
+
+        """
         return tf.tile(inputs[:, -1:, :], [1, self.OUT_STEPS, 1])
 
 def build_linear_model(args, num_features):
+    """
+    Build a Linear model.
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary of parameters.
+    num_features : int
+        Number of features.
+
+    Returns
+    -------
+    tensorflow.keras model
+        Linear model.
+
+    """
     return tf.keras.Sequential([
         #tf.keras.layers.Lambda(lambda x: x[:, -1:, :]),
         tf.keras.layers.Flatten(),
@@ -360,6 +486,22 @@ def build_linear_model(args, num_features):
 
 
 def build_dense_model(args, num_features):
+    """
+    Build a Dense model.
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary of parameters.
+    num_features : int
+        Number of features.
+
+    Returns
+    -------
+    tensorflow.keras model
+        Dense model.
+
+    """
     return tf.keras.Sequential([
         #tf.keras.layers.Lambda(lambda x: x[:, -1:, :]),
         tf.keras.layers.Flatten(),
@@ -370,6 +512,22 @@ def build_dense_model(args, num_features):
 
 
 def build_conv_model(args, num_features):
+    """
+    Build a 1d Convolutional model.
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary of parameters.
+    num_features : int
+        Number of features.
+
+    Returns
+    -------
+    tensorflow.keras model
+        1d Convolutional model.
+
+    """
     return tf.keras.Sequential([
         tf.keras.layers.Conv1D(128, activation='swish', kernel_size=args['CONV_WIDTH'], padding="same", kernel_initializer='glorot_uniform'),
         tf.keras.layers.Flatten(),
@@ -379,6 +537,22 @@ def build_conv_model(args, num_features):
 
 
 def build_lstm_model(args, num_features):
+    """
+    Build a LSTM model.
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary of parameters.
+    num_features : int
+        Number of features.
+
+    Returns
+    -------
+    tensorflow.keras model
+        LSTM model.
+
+    """
     return tf.keras.Sequential([
         tf.keras.layers.LSTM(256, return_sequences=False, kernel_initializer='glorot_uniform'),
         tf.keras.layers.Dense(args['OUT_STEPS'] * num_features, kernel_initializer='glorot_uniform'),
@@ -387,6 +561,32 @@ def build_lstm_model(args, num_features):
 
 
 def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0.0):
+    """
+    Creates a transformer encoder block with multi-head attention,
+    feed-forward layers, and residual connections.
+
+    Parameters
+    ----------
+    inputs : tf.Tensor
+        Input tensor to the transformer encoder block with shape (batch_size,
+        sequence_length, feature_dim).
+    head_size : int
+        Dimensionality of each attention head.
+    num_heads : int
+        Number of attention heads in the multi-head attention mechanism.
+    ff_dim : int
+        Dimensionality of the feed-forward network.
+    dropout : float, optional
+        Dropout rate applied to attention and feed-forward layers. The default
+        is 0.0.
+
+    Returns
+    -------
+    tf.Tensor
+        Output tensor of the transformer encoder block with the same shape as
+        the input tensor.
+
+    """
     # Attention and Normalization
     x = tf.keras.layers.MultiHeadAttention(key_dim=head_size, num_heads=num_heads, dropout=dropout,
                                            kernel_initializer='glorot_uniform')(inputs, inputs)
@@ -412,7 +612,40 @@ def build_transformer_model(
             out_steps,
             dropout=0.0,
             mlp_dropout=0.0):
+    """
+    Builds a Transformer-based model for sequence-to-sequence prediction.
 
+    Parameters
+    ----------
+    input_shape : tuple
+        Shape of the input data, excluding the batch size. Typically
+        (sequence_length, feature_dim).
+    head_size : int
+        Dimensionality of each attention head in the transformer encoder.
+    num_heads : int
+        Number of attention heads in each multi-head attention layer.
+    ff_dim : int
+        Dimensionality of the feed-forward network in the transformer encoder.
+    num_transformer_blocks : int
+        Number of transformer encoder blocks to include in the model.
+    mlp_units : list of int
+        List of integers specifying the number of units in each dense layer
+        of the MLP.
+    out_steps : int
+        Number of time steps to predict in the output sequence.
+    dropout : float, optional
+        Dropout rate applied within the transformer encoder blocks. The
+        default is 0.0.
+    mlp_dropout : float, optional
+        Dropout rate applied within the MLP layers. The default is 0.0.
+
+    Returns
+    -------
+    keras.Model
+        A compiled Keras model that maps input sequences to output sequences
+        with the specified architecture.
+
+    """
     inputs = keras.Input(shape=input_shape)
     x = inputs
     for _ in range(num_transformer_blocks):
@@ -434,22 +667,35 @@ def compile_and_fit(model, train_set, valid_set, patience=15,
                     save_folder='./', max_epoch=150, batch_size=512,
                     start_lr=1e-4, lr_factor=0.75):
     """
-    
+    Function to compile and train models.
+
     Parameters
     ----------
-    model : model to train.
-    train_set : (Xtrain, Ytrain).
-    valid_set : (Xvalid, Yvalid).
-    patience : n-iter before stop training if loss doesn't get lower.
-    save_folder : Posix path to save the best model.
-    max_epoch : max number of train epochs.
-    batch_size : batch size.
-    start_lr : Learning rate starting value.
-    lr_factor : Learning rate decrese factor.
+    model : keras.Model
+        model to train.
+    train_set : tuple of numpy.ndarray
+        Training dataset (Xtrain, Ytrain).
+    valid_set : tuple of numpy.ndarray
+        Validation dataset (Xvalid, Yvalid).
+    patience : int, optional
+        Number of iteration before stop training if loss doesn't get lower.
+        The default is 15.
+    save_folder : pathlib.Path, optional
+        Where to save the best model. The default is './'.
+    max_epoch : int, optional
+        Maximum number of train epochs. The default is 150.
+    batch_size : int, optional
+        Batch size. The default is 512.
+    start_lr : float, optional
+        Learning rate starting value. The default is 1e-4.
+    lr_factor : float, optional
+        Learning rate decrese factor. The default is 0.75.
 
     Returns
     -------
-    history
+    history : keras.callbacks.History
+        The training history object containing details about the training and
+        validation metrics and losses.
 
     """
 
@@ -485,7 +731,32 @@ def compile_and_fit(model, train_set, valid_set, patience=15,
 
 def batch_R2(model, X, y, batch_size):
     """
-    Compute coefficient of determination for multivariate data.
+    Computes the coefficient of determination (R2) for multivariate data,
+    both overall and per feature or time step, using batched model
+    predictions.
+
+    Parameters
+    ----------
+    model : keras.Model
+        The trained model used to make predictions.
+    X : numpy.ndarray
+        Input data of shape (num_samples, time_steps, num_features).
+    y : numpy.ndarray
+        Target data of shape (num_samples, time_steps, num_features).
+    batch_size : int
+        Number of samples per batch for generating predictions.
+
+    Returns
+    -------
+    metric : float
+        Overall R2 score, considering all features and time steps.
+    metric_features : numpy.ndarray
+        R2 scores for each feature, averaged across samples and time steps. 
+        Shape: (num_features,).
+    metric_times : numpy.ndarray
+        R2 scores for each time step, averaged across samples and features.
+        Shape: (time_steps,).
+
     """
     preds_f = np.zeros(y.shape)
     for i in range(0, len(X)+batch_size, batch_size):
@@ -560,9 +831,36 @@ def plot_learning(history, y_scale='log', save_p="./", figsize=(16, 4)):
 # Meta-data functions
 #=============================================================================
 
-def saving_infos(args, datasets, to_in_models, split_infos, OUTPUT_PATH):
+def saving_infos(args, datasets, to_in_models, split_infos, output_path):
     """
-    datasets order: X_train, y_train, X_valid, y_valid, X_test, y_test
+    Saves metadata information about the dataset splits, feature names, and
+    shapes to a CSV file.
+
+    Parameters
+    ----------
+    args : dict
+        Configuration dictionary containing flags to determine which metadata
+        to save. Keys include:
+        - 'SAVE_REPARTITION': bool, whether to save dataset split information.
+        - 'SAVE_SHAPE': bool, whether to save the shapes of the datasets.
+        - 'SAVE_NAME_FEATURES': bool, whether to save the feature names.
+    datasets : tuple
+        Contains the datasets in the following order:
+        (X_train, y_train, X_valid, y_valid, X_test, y_test).
+        Each element is a numpy.ndarray or compatible object.
+    to_in_models : list of str
+        List of feature names to be saved if 'SAVE_NAME_FEATURES' is enabled.
+    split_infos : dict
+        Dictionary containing information about dataset splits (e.g.,
+        train/validation/test ratios).
+    output_path : pathlib.Path
+        Directory where the metadata CSV file will be saved.
+
+    Returns
+    -------
+    None
+        Saves a CSV file named "metadata.csv" in the specified `output_path`.
+
     """
     df_metadata = pd.DataFrame()
     if args['SAVE_REPARTITION']:
@@ -582,7 +880,7 @@ def saving_infos(args, datasets, to_in_models, split_infos, OUTPUT_PATH):
             df_metadata['FEATURE_'+str(i)] = [key]
 
     df_metadata = df_metadata.transpose()
-    df_metadata.to_csv(OUTPUT_PATH / "metadata.csv")
+    df_metadata.to_csv(output_path / "metadata.csv")
 
 #=============================================================================
 # main

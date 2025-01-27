@@ -110,6 +110,8 @@ def make_gradients(dataf, windows, target, adding=''):
         Length of the moving windows.
     target : str
         Column name on which you want to compute the rolling gradients.
+    adding : str, optional
+        Text to add to the created columns. The default is ''.
 
     Returns
     -------
@@ -219,7 +221,26 @@ def load_and_preprocess_seismicity_data(data_path):
     return df, date_time
 
 def split_data(df, date_time):
-    """Splits the data into training, validation, and test sets."""
+    """
+    Splits the data into training, validation, and test sets.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataset with the features.
+    date_time : numpy.ndarray
+         1d vector of 'datetime64[h]'. Time of recordings of the reccords.
+
+    Returns
+    -------
+    train_df : pandas.DataFrame
+        Training dataset with the features.
+    valid_df : pandas.DataFrame
+        Validation dataset with the features.
+    test_df : pandas.DataFrame
+        Testing dataset with the features.
+
+    """
     valid_fraction, test_fraction = 0.15, 0.15
     train_fraction = 1 - valid_fraction - test_fraction
     nb_data = len(df)
@@ -233,14 +254,66 @@ def split_data(df, date_time):
     return train_df, valid_df, test_df
 
 def standardize_gnss_data(train_df, valid_df, test_df):
-    """Standardizes datasets using train mean and std deviation."""
+    """
+    Standardizes gnss datasets using train mean and std deviation.
+
+    Parameters
+    ----------
+    train_df : pandas.DataFrame
+        Tarining dataset with the features.
+    valid_df : pandas.DataFrame
+        Validation dataset with the features.
+    test_df : pandas.DataFrame
+        Testing dataset with the features.
+
+    Returns
+    -------
+    train_df : pandas.DataFrame
+        Training dataset with the features after standardization.
+    valid_df : pandas.DataFrame
+        Validation dataset with the features after standardization.
+    test_df : pandas.DataFrame
+        Testing dataset with the features after standardization.
+    train_mean : pandas.DataFrame
+        Training average for standardiztion.
+    train_std : pandas.DataFrame
+        Training standard deviation for standardiztion.
+
+    """
     train_mean, train_std = train_df.mean(), train_df.std()
     # we only use the standard deviation
-    train_df, valid_df, test_df = train_df / train_std, valid_df / train_std, test_df / train_std
+    valid_df, test_df = valid_df / train_std, test_df / train_std
+    train_df = train_df / train_std
+
     return train_df, valid_df, test_df, train_mean, train_std
 
 def standardize_seismicity_data(train_df, valid_df, test_df):
-    """Standardizes datasets using train mean and std deviation."""
+    """
+    Standardizes seismic datasets using train mean and std deviation.
+
+    Parameters
+    ----------
+    train_df : pandas.DataFrame
+        Training dataset with the features.
+    valid_df : pandas.DataFrame
+        Validation dataset with the features.
+    test_df : pandas.DataFrame
+        Testing dataset with the features.
+
+    Returns
+    -------
+    train_df : pandas.DataFrame
+        Training dataset with the features after standardization.
+    valid_df : pandas.DataFrame
+        Validation dataset with the features after standardization.
+    test_df : pandas.DataFrame
+        Testing dataset with the features after standardization.
+    train_mean : pandas.DataFrame
+        Training average for standardiztion.
+    train_std : pandas.DataFrame
+        Training standard deviation for standardiztion.
+
+    """
     train_mean, train_std = train_df.mean(), train_df.std()
 
     valid_df = (valid_df - train_mean) / train_std
@@ -251,18 +324,29 @@ def standardize_seismicity_data(train_df, valid_df, test_df):
 
 def create_dataset(df, input_width, out_steps, shuffle=False, threshold=None):
     """
-    Creates time series dataset for training/validation/testing with optional filtering 
-    based on a spike threshold.
-    
-    Parameters:
-    - df: pandas DataFrame, time series data
-    - input_width: int, number of input time steps in each sequence
-    - out_steps: int, number of output time steps to predict
-    - threshold: float, optional threshold to filter sequences that contain spikes
-    
-    Returns:
-    - X: numpy array of shape (filtered_num_sequences, input_width), input sequences
-    - y: numpy array of shape (filtered_num_sequences, out_steps), target sequences
+    Creates time series dataset for training/validation/testing with optional
+    filtering based on a spike threshold.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        Time series data.
+    input_width : int
+        Number of input time steps in each sequence.
+    out_steps : int
+        Number of output time steps to predict.
+    shuffle : bool
+        If the sample are shuffled.
+    threshold : float
+        Optional threshold to filter sequences that contain spikes.
+
+    Returns
+    -------
+    X : numpy.ndarray
+        Shape (filtered_num_sequences, input_width), input sequences.
+    y : numpy.ndarray
+        Shape (filtered_num_sequences, out_steps), target sequences.
+
     """
     # Set appropriate dtype based on the length of df
     dtype = 'int32' if len(df) < 2147483646 else 'int64'
@@ -283,13 +367,36 @@ def create_dataset(df, input_width, out_steps, shuffle=False, threshold=None):
 
     # Apply threshold filtering if specified
     if threshold is not None:
-        mask = np.any(np.abs(X) > threshold, axis=(1, 2))  # Find sequences containing spikes above the threshold
+        # Find sequences containing spikes above the threshold
+        mask = np.any(np.abs(X) > threshold, axis=(1, 2))
         X = X[mask]
         y = y[mask]
 
     return X, y
 
 def get_gnss_set(args, data_path):
+    """
+    Extract test gnss dataset.
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary with init file informations.
+    data_path : pathlib.Path
+        Path to access to the data.
+
+    Returns
+    -------
+    features_names : numpy.ndarray
+        1d vector of the feature's name.
+    X_test : numpy.ndarray
+        3d tensor used as input for the test dataset.
+    y_test : numpy.ndarray
+        3d tensor used as output for the test dataset.
+    test_df : pandas.DataFrame
+        Testing dataset with the features after standardization.
+
+    """
     # Load and preprocess data
     df, date_time = load_and_preprocess_gnss_data(data_path)
     feature_names = np.array(list(df.columns))
@@ -308,6 +415,28 @@ def get_gnss_set(args, data_path):
     return feature_names, X_test, y_test, test_df
 
 def get_seismic_set(args, data_path):
+    """
+    Extract test seismic dataset.
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary with init file informations.
+    data_path : pathlib.Path
+        Path to access to the data.
+
+    Returns
+    -------
+    features_names : numpy.ndarray
+        1d vector of the feature's name.
+    X_test : numpy.ndarray
+        3d tensor used as input for the test dataset.
+    y_test : numpy.ndarray
+        3d tensor used as output for the test dataset.
+    test_df : pandas.DataFrame
+        Testing dataset with the features after standardization.
+
+    """
     # Load and preprocess data
     df, date_time = load_and_preprocess_seismicity_data(data_path)
     feature_names = np.array(list(df.columns))
@@ -318,10 +447,12 @@ def get_seismic_set(args, data_path):
     train_df, valid_df, test_df = split_data(df, date_time)
 
     # Standardize data
-    train_df, valid_df, test_df, train_mean, train_std = standardize_seismicity_data(train_df, valid_df, test_df)
+    (train_df, valid_df, test_df, train_mean,
+     train_std) = standardize_seismicity_data(train_df, valid_df, test_df)
 
     # Prepare tet dataset
-    X_test, y_test = create_dataset(test_df, args['INPUT_WIDTH'], args['OUT_STEPS'])
+    X_test, y_test = create_dataset(test_df, args['INPUT_WIDTH'],
+                                    args['OUT_STEPS'])
 
     return feature_names, X_test, y_test, test_df
 
@@ -330,6 +461,27 @@ def get_seismic_set(args, data_path):
 #=============================================================================
 
 def select_best_model(args, path):
+    """
+    Function to found the model with lowest MSE on test dataset.
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary with init file informations.
+    path : pathlib.Path
+        Path to access the summary .
+
+    Returns
+    -------
+    best_iteration : str
+        String index of the best initialization.
+    best_model : str
+        Name of the best model from the best initialization.
+    error_test : float
+        MSE error of the best model through all initialization on the test
+        dataset.
+
+    """
     Test_MSE = []
     for i in range(args['NB_RUNS']):
         df = pd.read_csv('./' / path / str(i) / 'performance.csv')
@@ -339,10 +491,33 @@ def select_best_model(args, path):
     Test_MSE = np.array(Test_MSE, dtype=float)
     error_test = np.min(Test_MSE)
     pmin_Test_MSE = np.argwhere(Test_MSE == error_test)[0]
-    best_iteration, best_model = str(pmin_Test_MSE[0]), models[pmin_Test_MSE[1]]
+    best_iteration = str(pmin_Test_MSE[0])
+    best_model = models[pmin_Test_MSE[1]]
     return best_iteration, best_model, error_test
 
 def estimation_rand(model, X, y, id_i, batch_len=None):
+    """
+    Function to estimate the error induced from the shuffling.
+
+    Parameters
+    ----------
+    model : tensorflow.keras model
+        Best model to analyze.
+    X : numpy.ndarray
+        Input of test dataset.
+    y : numpy.ndarray
+        Output of test dataset.
+    id_i : int
+        Index to shuffle.
+    batch_len : int, optional
+        Lenght of the batch to not overflow the memory.
+
+    Returns
+    -------
+    err_perm : float
+        MSE induced from the shuffle.
+
+    """
     # copy the origin input data
     Xp = np.copy(X).astype('float32')
     # Xp shape is => (samples, days, channels)
@@ -358,7 +533,8 @@ def estimation_rand(model, X, y, id_i, batch_len=None):
         for i in range(0, len(Xp)+batch_len, batch_len):
             # compute MSE
             if y_train[i:i+len_batch].shape[0] > 0:
-                err_perm += np.sum((y[i:i+batch_len] - model(Xp[i:i+batch_len]))**2)
+                err_perm += np.sum((y[i:i+batch_len] -
+                                    model(Xp[i:i+batch_len]))**2)
 
         # get the average
         err_perm = err_perm/len(Xp)
@@ -370,7 +546,37 @@ def estimation_rand(model, X, y, id_i, batch_len=None):
 
 def compute_feature_importance(args, model, feature_names, error_test, X, y,
                                path, best_iteration, best_model):
-    # pandas.DataFrame file structure at the output for n shuffles and m features
+    """
+    Function to compute error induced over multiple shuffles.
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary with init file informations.
+    model : tensorflow.keras model
+        Best model to analyze.
+    feature_names : numpy.ndarray
+        1d vector of the feature's name.
+    error_test : float
+        MSE error of the best model through all initialization on the test
+        dataset.
+    X : numpy.ndarray
+        Input of test dataset.
+    y : numpy.ndarray
+        Output of test dataset.
+    path : pathlib.Path
+        Where to save the analyze.
+    best_iteration :str
+        String index of the best initialization.
+    best_model :str
+        Name of the best model from the best initialization.
+    
+    Returns
+    -------
+    None
+
+    """
+    # pd.DataFrame file structure at the output for n shuffles and m features
     # +--------------+------------+ ... +------------+ ... +-------------+
     # |   Shuffles   | feature_0  |     | feature_p  |     |feature_(m-1)|
     # +--------------+------------+ ... +------------+ ... +-------------+
@@ -404,6 +610,24 @@ def compute_feature_importance(args, model, feature_names, error_test, X, y,
     file.to_csv(path / file_name, index=False)
 
 def make_resume_table(path, file_name):
+    """
+    Creates a summary table with median and standard deviation of the ratio
+    between feature importance (shuffled values) and the test error (MSE).
+    The summary is saved as a new CSV file.
+
+    Parameters
+    ----------
+    path : pathlib.Path
+        Path to the directory containing the input file.
+    file_name : str
+        Save name of the CSV file containing feature importance of the test
+        error.
+
+    Returns
+    -------
+    None
+
+    """
     fi_file = pd.read_csv(path / file_name)
     fnames = np.array(list(fi_file.columns)[1:])
 
@@ -424,20 +648,43 @@ def make_resume_table(path, file_name):
     resume_file.to_csv(path / save_name, index=False)
 
 def show_corr_signals(args, path, data_path, file_name):
-    df = pd.read_csv(path / file_name)
+    """
+    Function to print correlation between inputs and features importance.
 
+    Parameters
+    ----------
+    args : dict
+        Dictionary with init file informations.
+    path : pathlib.Path
+        Path to the directory containing the features importance file.
+    data_path : pathlib.Path
+        Path to the dataset.
+    file_name : str
+        Save name of the CSV file containing feature importance of the test
+        error.
+
+    Returns
+    -------
+    None
+
+    """
+    df = pd.read_csv(path / file_name)
     if args['DATASET'] == 'gnss':
         feature_names, X_test, y_test, test_df = get_gnss_set(args, data_path)
 
     if args['DATASET'] == 'seismicity':
-        feature_names, X_test, y_test, test_df = get_seismic_set(args, data_path)
+        feature_names, X_test, y_test, test_df = get_seismic_set(args,
+                                                                 data_path)
 
     median = df.values[0, ::2]
     rank_fi = np.argsort(median)
     amplitudes = (test_df.max()-test_df.min()).to_numpy().astype(float)
     rank_signal = np.argsort(amplitudes)
-    pearson_corr_values = np.corrcoef(median[rank_fi], amplitudes[rank_fi])[0, 1]
-    pearson_corr_rank = np.corrcoef(rank_fi[rank_fi], rank_signal[rank_fi])[0, 1]
+    pearson_corr_values = np.corrcoef(median[rank_fi],
+                                      amplitudes[rank_fi])[0, 1]
+
+    pearson_corr_rank = np.corrcoef(rank_fi[rank_fi],
+                                    rank_signal[rank_fi])[0, 1]
 
     print('')
     print('With '+args['DATASET']+' dataset:')
@@ -488,10 +735,47 @@ def show_corr_signals(args, path, data_path, file_name):
 #=============================================================================
 
 def plot_feature_importance(args, path, file_name, fnames=None,
-                            figsize=(3.22, 3.22), dpi=200, limit_proportion=0.04,
-                            bar_width=1, delta_vert=0.2, width_vert=0.05,
-                            xlims=None, ylims=None):
+                            figsize=(3.22, 3.22), dpi=200,
+                            limit_proportion=0.04, bar_width=1,
+                            delta_vert=0.2, width_vert=0.05, xlims=None,
+                            ylims=None):
+    """
+    Function to plot the median of the MSE ratio of the shuffle.
 
+    Parameters
+    ----------
+    args : dict
+        Dictionary with init file informations.
+    path : pathlib.Path
+        Where to save the figure.
+    file_name : str
+        Name of the file with the summary of the features importance analysis.
+    fnames : list, optional
+        Features name. The default is None.
+    figsize : tuple, optional
+        Size of the figure in inches. The default is (3.22, 3.22).
+    dpi : int, optional
+        Dots per inches. The default is 200.
+    limit_proportion : float, optional
+        Width proportion for x and y-axis. The default is 0.04.
+    bar_width : float, optional
+        Width of the bar. The default is 1.
+    delta_vert : float, optional
+        Vertical offset for the min-max amplitude of the distribution. The
+        default is 0.2.
+    width_vert : float, optional
+        Width or the min-max amplitude of the distribution. The
+        default is 0.05.
+    xlims : tuple, optional
+        Lower and upper limit of x-axis. The default is None.
+    ylims : tuple, optional
+        Lower and upper limit of y-axis. The default is None.
+
+    Returns
+    -------
+    None
+
+    """
     fi_file = pd.read_csv(path / file_name)
     if type(fnames) == type(None):
         fnames = np.array(list(fi_file.columns)[1:])

@@ -70,6 +70,8 @@ def make_gradients(dataf, windows, target, adding=''):
         Length of the moving windows.
     target : str
         Column name on which you want to compute the rolling gradients.
+    adding : str, optional
+        Text to add to the created columns. The default is ''.
 
     Returns
     -------
@@ -156,7 +158,7 @@ def load_and_preprocess_seismicity_data(data_path):
     Parameters
     ----------
     data_path : str or Path
-        Path to the xlsx file with seismicity data
+        Path to the xlsx file with seismicity data.
 
     Returns
     -------
@@ -181,8 +183,22 @@ def load_and_preprocess_seismicity_data(data_path):
 
 def split_data_train(args, df, path):
     """
-    Splits the data into training, validation, and test sets from
-    the saved meta-data.
+    Splits the data to get training dataset for the standardization.
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary with init file informations.
+    df : pandas.DataFrame
+        Dataset with the features.
+    path : pathlib.Path
+        Path to access to the metadata informations.
+
+    Returns
+    -------
+    train_df : pandas.DataFrame
+        Training dataset with the features.
+
     """
     df_meta = pd.read_csv(path / args['SEED'] / 'metadata.csv')
     split_index = df_meta.loc[[0, 1, 2], '0'].to_list()
@@ -197,7 +213,18 @@ def split_data_train(args, df, path):
 
 def standardize_gnss_df(df_raw, train_df):
     """
-    Standardizes datasets using train mean and std deviation.
+    Standardizes gnss datasets using train standard deviation.
+
+    Parameters
+    ----------
+    train_df : pandas.DataFrame
+        Training dataset without standardization.
+
+    Returns
+    -------
+    train_df : pandas.DataFrame
+        Standardized training dataset.
+
     """
     train_std = train_df.std()
 
@@ -207,7 +234,18 @@ def standardize_gnss_df(df_raw, train_df):
 
 def standardize_seismicity_df(df_raw, train_df):
     """
-    Standardizes datasets using train mean and std deviation.
+    Standardizes seismic datasets using train mean and standard deviation.
+
+    Parameters
+    ----------
+    train_df : pandas.DataFrame
+        Training dataset without standardization.
+
+    Returns
+    -------
+    train_df : pandas.DataFrame
+        Standardized training dataset.
+
     """
     train_mean, train_std = train_df.mean(), train_df.std()
 
@@ -215,6 +253,28 @@ def standardize_seismicity_df(df_raw, train_df):
     return df_norm
 
 def get_gnss_df(args, path, data_path):
+    """
+    Function to extract gnss Data Frame and to standardize it.
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary with init file informations.
+    path : pathlib.Path
+        Path to access to the metadata informations.
+    data_path : str or Path
+        Path to the xlsx file with seismicity data.
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Dataset without standardization.
+    df_norm : pandas.DataFrame
+        Dataset with standardization.
+    date_time : numpy.ndarray
+        1 d time vector.
+
+    """
     # Load and preprocess data
     df, date_time = load_and_preprocess_gnss_data(data_path)
 
@@ -227,6 +287,28 @@ def get_gnss_df(args, path, data_path):
     return df, df_norm, date_time
 
 def get_seismic_df(args, path, data_path):
+    """
+    Function to extract seismic Data Frame and to standardize it.
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary with init file informations.
+    path : pathlib.Path
+        Path to access to the metadata informations.
+    data_path : str or Path
+        Path to the xlsx file with seismicity data.
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Dataset without standardization.
+    df_norm : pandas.DataFrame
+        Dataset with standardization.
+    date_time : numpy.ndarray
+        1 d time vector.
+
+    """
     # Load and preprocess data
     df, date_time = load_and_preprocess_seismicity_data(data_path)
 
@@ -243,16 +325,62 @@ def get_seismic_df(args, path, data_path):
 #=============================================================================
 
 def xlim_from_args(args):
+    """
+    Function to compute limits from the dictionary from init file.
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary with init file informations.
+
+    Returns
+    -------
+    xlims : numpy.ndarray
+        Lower and upper time limits.
+
+    """
     xlims = np.array(args['TIME_LIMITS'], dtype='datetime64[h]')
     return xlims
 
 def time_to_index(args, date_time):
+    """
+    Function .
+
+    Parameters
+    ----------
+    args : dict
+        Dictionary with init file informations.
+    date_time : numpy.ndarray
+        1 d time vector.
+
+    Returns
+    -------
+    plot_index : numpy.ndarray
+        Lower and upper index of time limits.
+
+    """
     plot_index = np.argwhere(date_time == np.array(args['PLOT_TIMES'],
                              dtype='datetime64[h]')[:, np.newaxis])[:, 1]
 
     return plot_index
 
 def new_line_str(text):
+    """
+    Replaces occurrences of the escape sequence "\\n" in the input string
+    with actual newlines ('\n').
+
+    Parameters
+    ----------
+    text : str
+        The input string that may contain the "\\n" escape sequence.
+
+    Returns
+    -------
+    new_text : str
+        The modified string with "\\n" replaced by actual newlines ('\n'). 
+        If no "\\n" is found, the original string is returned unchanged.
+
+    """
     array_c = np.array(list(text)).astype(object)
     if '\\' in array_c:
         pos_spe = np.argwhere(array_c == '\\')
@@ -319,7 +447,57 @@ def plot_predictions(args, df_raw, df_norm, date_time, model, path,
                      lw_grid=0.6, alpha_grid=0.7,
                      lw_pred=3,
                      legend_sz=8, legend_mksc=1.5):
+    """
+    Function to plot model predictions.
 
+    Parameters
+    ----------
+    args :dict
+        Dictionary of parameters.
+    df_raw : pandas.DataFrame
+        Unstandardized dataset.
+    df_norm : pandas.DataFrame
+        Standardized dataset.
+    date_time : numppy.ndarray
+        1d vector with time of reccording.
+    model : tensorflow.keras model
+        Model making the prediction.
+    path : pathlib.Path
+        Where to save the figure.
+    figsize : tuple, optional
+        . The default is (3.22, 3.22).
+    dpi : int, optional
+        Dots per inches. The default is 200.
+    limit_proportion : float, optional
+        Width proportion for x and y-axis. The default is 0.02.
+    ylims : tuple, optional
+        Lower and upper limits of the y-axis. The default is None.
+    xticks_sz : float, optional
+        X ticks text size. The default is 13.
+    yticks_sz : float, optional
+        Y ticks text size. The default is 13.
+    chanel_lw : float, optional
+        Line width of the data. The default is 2.
+    chanel_ms : float, optional
+        Marker size of the data. The default is 6.
+    size_label : float, optional
+        Text size of the labels. The default is 16.
+    lw_grid : float, optional
+        Width of the lines of the grid. The default is 0.6.
+    alpha_grid : float, optional
+        Transparancy of the lines of the grid. The default is 0.7.
+    lw_pred : float, optional
+        Width of the lines of the model predictions. The default is 3.
+    legend_sz : float, optional
+        Legend text size. The default is 8.
+    legend_mksc : float, optional
+        Legend marker scale. The default is 1.5.
+
+    Returns
+    -------
+    None
+
+    """
     xlims = xlim_from_args(args)
     time_split_id = np.argwhere(date_time == xlims[:, np.newaxis])[:, 1]
     timing = date_time[time_split_id[0]:time_split_id[1]+1]
@@ -473,5 +651,3 @@ if __name__ == "__main__":
     }
 
     main(args)
-
-
