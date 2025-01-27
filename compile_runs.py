@@ -420,11 +420,19 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read('compile_runs.ini')
 
+    # type of dataset
+    type_dataset = config['DATA'].get('DATASET')
+
+    # Load configuration from run file
+    PATH = Path(config['DATA'].get('PATH'))
+    config_run = configparser.ConfigParser()
+    config_run.read(PATH / '{}.ini'.format(type_dataset))
+
     # Parse arguments
     args = {
         'PATH': config['DATA'].get('PATH'),
         'DATASET': config['DATA'].get('DATASET'),
-        'NB_RUNS': config['MODELE'].getint('NB_RUNS'),
+        'NB_RUNS': config_run['MODEL'].getint('NB_RUNS'),
         'COMPILE_RUNS': config['COMPILATION'].getboolean('COMPILE_RUNS'),
         'METRICS_TO_PLOT': config['COMPILATION'].get('METRICS_TO_PLOT').split(','),
         'PLOT_R2_TIME': config['COMPILATION'].getboolean('PLOT_R2_TIME'),

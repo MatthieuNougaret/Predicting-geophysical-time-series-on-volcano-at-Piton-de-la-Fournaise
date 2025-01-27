@@ -616,6 +616,14 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read('plot_prediction.ini')
 
+    # type of dataset
+    type_dataset = config['DATA'].get('DATASET')
+
+    # Load configuration from run file
+    PATH = Path(config['DATA'].get('PATH'))
+    config_run = configparser.ConfigParser()
+    config_run.read(PATH / '{}.ini'.format(type_dataset))
+
     PLOT_TIMES = config['FIGURE'].get('PLOT_TIMES').split(',')
     COLORS_PREDS = config['FIGURE'].get('COLORS_PREDS').split(',')
     TIME_LIMITS = config['FIGURE'].get('TIME_LIMITS').split(',')
@@ -629,10 +637,10 @@ if __name__ == "__main__":
     args = {
         'DATASET': config['DATA'].get('DATASET'),
         'PATH': config['DATA'].get('PATH'),
-        'DATA_PATH': config['DATA'].get('DATA_PATH'),
-        'INPUT_WIDTH': config['WINDOW'].getint('INPUT_WIDTH'),
-        'OUT_STEPS': config['WINDOW'].getint('OUT_STEPS'),
-        'SHIFT': config['WINDOW'].getint('SHIFT'),
+        'DATA_PATH': config_run['DATA'].get('DATA_PATH'),
+        'INPUT_WIDTH': config_run['WINDOW'].getint('INPUT_WIDTH'),
+        'OUT_STEPS': config_run['WINDOW'].getint('OUT_STEPS'),
+        'SHIFT': config_run['WINDOW'].getint('SHIFT'),
         'SEED': config['MODEL'].get('SEED'),
         'MODEL': config['MODEL'].get('MODEL'),
         'PLOT_TIMES': PLOT_TIMES,

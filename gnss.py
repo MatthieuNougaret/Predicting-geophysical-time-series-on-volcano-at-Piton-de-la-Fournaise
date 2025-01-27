@@ -348,9 +348,13 @@ def evaluate_models(X_train, y_train, X_valid, y_valid, X_test, y_test, args,
 
     """
     num_features = len(to_out)
+<<<<<<< HEAD
     performance_df = pd.DataFrame(['Last', 'Linear', 'Dense', 'Conv', 'LSTM',
                                    'Transformer'], columns=["Model"])
 
+=======
+    performance_df = pd.DataFrame(['Last', 'Linear', 'Dense', 'Conv1D', 'LSTM', 'Transformer'], columns=["Model"])
+>>>>>>> 05da676fa86150fc78e812e90b5471522d8fb0c3
     performance_df['Valid_MSE'], performance_df['Valid_MAE'] = 0.0, 0.0
     performance_df['Test_MSE'], performance_df['Test_MAE'] = 0.0, 0.0
     performance_df['Valid_R2'], performance_df['Test_R2'] = 0.0, 0.0
@@ -899,7 +903,7 @@ if __name__ == "__main__":
     # Load configuration
     config = configparser.ConfigParser()
     config.read('gnss.ini')
-    NB_RUNS = config['MODELE'].getint('NB_RUNS')
+    NB_RUNS = config['MODEL'].getint('NB_RUNS')
 
     # Parse arguments
     args = {
@@ -908,12 +912,12 @@ if __name__ == "__main__":
         'INPUT_WIDTH': config['WINDOW'].getint('INPUT_WIDTH'),
         'OUT_STEPS': config['WINDOW'].getint('OUT_STEPS'),
         'SHIFT': config['WINDOW'].getint('SHIFT'),
-        'MAX_EPOCHS': config['MODELE'].getint('MAX_EPOCHS'),
-        'BATCH_SIZE': config['MODELE'].getint('BATCH_SIZE'),
-        'LR_FACTOR': config['MODELE'].getfloat('LR_FACTOR'),
-        'CONV_WIDTH': config['MODELE'].getint('CONV_WIDTH'),
-        'PATIENCE': config['MODELE'].getint('PATIENCE'),
-        'SEED': config['MODELE'].getint('SEED'),
+        'MAX_EPOCHS': config['MODEL'].getint('MAX_EPOCHS'),
+        'BATCH_SIZE': config['MODEL'].getint('BATCH_SIZE'),
+        'LR_FACTOR': config['MODEL'].getfloat('LR_FACTOR'),
+        'CONV_WIDTH': config['MODEL'].getint('CONV_WIDTH'),
+        'PATIENCE': config['MODEL'].getint('PATIENCE'),
+        'SEED': config['MODEL'].getint('SEED'),
         'SAVE_REPARTITION': config['METADATA'].getboolean('SAVE_REPARTITION'),
         'SAVE_SHAPE': config['METADATA'].getboolean('SAVE_SHAPE'),
         'SAVE_NAME_FEATURES': config['METADATA'].getboolean('SAVE_NAME_FEATURES'),
