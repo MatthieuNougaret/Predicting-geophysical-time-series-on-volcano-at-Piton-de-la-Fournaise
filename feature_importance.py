@@ -532,7 +532,7 @@ def estimation_rand(model, X, y, id_i, batch_len=None):
         err_perm = 0
         for i in range(0, len(Xp)+batch_len, batch_len):
             # compute MSE
-            if y_train[i:i+len_batch].shape[0] > 0:
+            if y[i:i+batch_len].shape[0] > 0:
                 err_perm += np.sum((y[i:i+batch_len] -
                                     model(Xp[i:i+batch_len]))**2)
 
