@@ -339,13 +339,9 @@ def evaluate_models(X_train, y_train, X_valid, y_valid, X_test, y_test, args,
 
     """
     num_features = len(to_out)
-<<<<<<< HEAD
     performance_df = pd.DataFrame(['Last', 'Linear', 'Dense', 'Conv', 'LSTM',
                                    'Transformer'], columns=["Model"])
 
-=======
-    performance_df = pd.DataFrame(['Last', 'Linear', 'Dense', 'Conv1D', 'LSTM', 'Transformer'], columns=["Model"])
->>>>>>> 05da676fa86150fc78e812e90b5471522d8fb0c3
     performance_df['Valid_MSE'], performance_df['Valid_MAE'] = 0.0, 0.0
     performance_df['Test_MSE'], performance_df['Test_MAE'] = 0.0, 0.0
     performance_df['Valid_R2'], performance_df['Test_R2'] = 0.0, 0.0
@@ -533,7 +529,7 @@ def build_conv_model(args, num_features):
 
     """
     return tf.keras.Sequential([
-        tf.keras.layers.Conv1D(128, activation='swish', kernel_size=args['CONV_WIDTH'], padding="same", kernel_initializer='glorot_uniform'),
+        tf.keras.layers.Conv1D(128, activation='swish', kernel_size=5, padding="same", kernel_initializer='glorot_uniform'),
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(args['OUT_STEPS'] * num_features, kernel_initializer='glorot_uniform'),
         tf.keras.layers.Reshape([args['OUT_STEPS'], num_features])
@@ -907,7 +903,6 @@ if __name__ == "__main__":
         'MAX_EPOCHS': config['MODEL'].getint('MAX_EPOCHS'),
         'BATCH_SIZE': config['MODEL'].getint('BATCH_SIZE'),
         'LR_FACTOR': config['MODEL'].getfloat('LR_FACTOR'),
-        'CONV_WIDTH': config['MODEL'].getint('CONV_WIDTH'),
         'PATIENCE': config['MODEL'].getint('PATIENCE'),
         'SEED': config['MODEL'].getint('SEED'),
         'SAVE_REPARTITION': config['METADATA'].getboolean('SAVE_REPARTITION'),
