@@ -224,8 +224,8 @@ def split_data(df, date_time, output_path, generate_figure=True):
         plt.legend(title='Datasets', fontsize=16, title_fontsize=16)
         plt.savefig(output_path / 'sets_repartition.png', bbox_inches='tight')
 
-    plt.close()
-    plt.show()
+        plt.close()
+        plt.show()
 
     return train_df, valid_df, test_df, split_infos
 

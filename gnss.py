@@ -236,8 +236,8 @@ def split_data(df, date_time, output_path, generate_figure=True):
         plt.legend(title='Datasets', fontsize=16, title_fontsize=16)
         plt.savefig(output_path / 'sets_repartition.png', bbox_inches='tight')
 
-    plt.close()
-    plt.show()
+        plt.close()
+        plt.show()
 
     return train_df, valid_df, test_df, split_infos
 
@@ -374,7 +374,7 @@ def evaluate_models(X_train, y_train, X_valid, y_valid, X_test, y_test, args,
                                                4, # heads
                                                21, #ff_dim
                                                4, # num_transformer_blocks
-                                               [21, 7], # mlp_units
+                                               [7], # mlp_units
                                                args['OUT_STEPS'], #output_steps
                                                0.0, # mlp_dropout
                                                0.0, # dropout
