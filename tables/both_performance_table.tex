@@ -1,0 +1,16 @@
+\begin{table}
+\caption{Performance of machine learning models for the joint datasets. Reported peak-weighted Root Mean Squared Error (pRMSE), Mean Absolute Scaled Error (MASE) and Coefficient of determination (R$^2$ score) are average and standard deviation values calculated using predictions from 10 different runs per model. Best scores per metric are marked in bold.}
+\label{tab:ml_perf_both}
+\begin{tabular}{lccccccccc}
+\toprule
+Model & Train pRMSE & Valid. pRMSE & Test pRMSE & Train MASE & Valid. MASE & Test MASE & Train $R^2$ & Valid. $R^2$ & Test $R^2$ \\
+\midrule
+Last & 0.1302 & 0.1475 & 0.1237 & 8.0748 & 8.0906 & 7.2382 & 0.4615 & 0.3156 & 0.4307 \\
+Linear & 0.1154 & 0.1334 & 0.1120 & 5.1099 & 5.1429 & 4.8718 & 0.6275 & 0.4910 & 0.5962 \\
+Dense & 0.1126 & 0.1344 & 0.1104 & 5.2838 & 6.4909 & 6.4058 & 0.6552 & 0.4952 & 0.6230 \\
+Conv & 0.1127 & 0.1349 & 0.1106 & 5.3730 & 6.8352 & 6.7277 & 0.6523 & 0.4924 & 0.6228 \\
+LSTM & 0.1112 & 0.1335 & 0.1098 & 5.3551 & 8.1484 & 8.3927 & 0.6661 & 0.5059 & 0.6277 \\
+Transformer & 0.1122 & 0.1340 & 0.1098 & 4.8467 & 6.7055 & 6.7467 & 0.6617 & 0.5103 & 0.6348 \\
+\bottomrule
+\end{tabular}
+\end{table}

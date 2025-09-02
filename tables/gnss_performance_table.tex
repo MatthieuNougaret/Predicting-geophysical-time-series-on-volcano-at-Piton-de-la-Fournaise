@@ -1,0 +1,16 @@
+\begin{table}
+\caption{Performance of machine learning models for the GNSS case. Reported peak-weighted Root Mean Squared Error (pRMSE), Mean Absolute Scaled Error (MASE) and Coefficient of determination (R$^2$ score) are average and standard deviation values calculated using predictions from 10 different runs per model. Best scores per metric are marked in bold.}
+\label{tab:ml_perf_gnss}
+\begin{tabular}{lccccccccc}
+\toprule
+Model & Train pRMSE & Valid. pRMSE & Test pRMSE & Train MASE & Valid. MASE & Test MASE & Train $R^2$ & Valid. $R^2$ & Test $R^2$ \\
+\midrule
+Last & 0.0039 & 0.0035 & 0.0027 & 8.8598 & 8.7558 & 7.8754 & -0.0382 & -0.0219 & -0.1020 \\
+Linear & 0.0032 & 0.0027 & 0.0022 & 4.9506 & 4.8379 & 4.5110 & 0.4828 & 0.4817 & 0.4477 \\
+Dense & 0.0032 & 0.0028 & 0.0023 & 5.6504 & 7.0571 & 6.7489 & 0.5040 & 0.4288 & 0.3724 \\
+Conv & 0.0032 & 0.0028 & 0.0023 & 5.6364 & 7.0956 & 6.7149 & 0.5031 & 0.4329 & 0.3773 \\
+LSTM & 0.0033 & 0.0031 & 0.0026 & 5.6327 & 9.0219 & 8.8549 & 0.4443 & 0.3247 & 0.2431 \\
+Transformer & 0.0032 & 0.0029 & 0.0024 & 5.2220 & 7.3444 & 7.0314 & 0.4828 & 0.3914 & 0.3375 \\
+\bottomrule
+\end{tabular}
+\end{table}
