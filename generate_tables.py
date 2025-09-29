@@ -49,21 +49,21 @@ def generate_latex_table(csv_path, tex_path, caption, label):
 
 
 generate_latex_table(
-    csv_path="./test_seismicity/performance_compiled_paper.csv",
+    csv_path="./models_seismicity/performance_compiled_paper.csv",
     tex_path="./tables/seismicity_performance_table.tex",
     caption="Performance of machine learning models for the seismicity case. Reported peak-weighted Root Mean Squared Error (pRMSE), Mean Absolute Scaled Error (MASE) and Coefficient of determination (R$^2$ score) are average and standard deviation values calculated using predictions from 10 different runs per model. Best scores per metric are marked in bold.",
     label="tab:ml_perf_seis"
 )
 
 generate_latex_table(
-    csv_path="./test_gnss/performance_compiled_paper.csv",
+    csv_path="./models_gnss/performance_compiled_paper.csv",
     tex_path="./tables/gnss_performance_table.tex",
     caption="Performance of machine learning models for the GNSS case. Reported peak-weighted Root Mean Squared Error (pRMSE), Mean Absolute Scaled Error (MASE) and Coefficient of determination (R$^2$ score) are average and standard deviation values calculated using predictions from 10 different runs per model. Best scores per metric are marked in bold.",
     label="tab:ml_perf_gnss"
 )
 
 generate_latex_table(
-    csv_path="./test_both/performance_compiled_paper.csv",
+    csv_path="./models_both/performance_compiled_paper.csv",
     tex_path="./tables/both_performance_table.tex",
     caption="Performance of machine learning models for the joint datasets. Reported peak-weighted Root Mean Squared Error (pRMSE), Mean Absolute Scaled Error (MASE) and Coefficient of determination (R$^2$ score) are average and standard deviation values calculated using predictions from 10 different runs per model. Best scores per metric are marked in bold.",
     label="tab:ml_perf_both"

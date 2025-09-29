@@ -43,9 +43,9 @@ def main(args):
     df_compile.to_csv(compiled_file, index=False)
 
     # Save subset for paper table
-    cols = ["Train_pRMSE_median", "Valid_pRMSE_median", "Test_pRMSE_median",
-            "Train_MASE_median", "Valid_MASE_median", "Test_MASE_median",
-            "Train_R2_median", "Valid_R2_median", "Test_R2_median"]
+    cols = ["Train_pRMSE_average", "Valid_pRMSE_average", "Test_pRMSE_average",
+            "Train_MASE_average", "Valid_MASE_average", "Test_MASE_average",
+            "Train_R2_average", "Valid_R2_average", "Test_R2_average"]
     df_compile[cols].to_csv(path / "performance_compiled_paper.csv", index=False)
 
     # Plot metrics if requested
