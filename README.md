@@ -13,11 +13,13 @@ The input data (`data/data_in.xlsx`) contains:
 
 Features are processed using rolling gradient computations over 5, 10, and 30-day windows to capture temporal trends.
 
+
 ## Training models
 
 ### The configuration files
 
 The files [`seismicity.ini`](seismicity.ini), [`gnss.ini`](gnss.ini) and [`both.ini`](both.ini) contain the settings for data paths, windowing, model hyperparameters, learning rates, and metadata saving options for experiments using the GNSS and seismicity data from Piton de la Fournaise volcano.
+
 
 ### Training script : `train.py`
 
@@ -32,6 +34,7 @@ where `OUTPUT_PATH` is the path where you want the models to be saved, and `data
 - `seismicity`: the daily number of VT events  
 - `both`: the combination of the GNSS and seismicity dataset
 
+
 ### Tuning model hyperparameters : `optuna_hyperopt.py`
 
 The script [`optuna_hyperopt.py`](optuna_hyperopt.py) uses [Optuna](https://optuna.readthedocs.io/en/stable/index.html#) to tune the model hyperparameters. This automatic tuning is only done for the autoregressive Transformer model. Hyperparameter of other models were tuned by hand. If wanted, it is easy to change this script to tune the hyperparameters of another model, just replace the creation of the Transformer model by that of another model available in the source code (see in particular the code in [`functions_model.py`](functions_model.py)).
@@ -43,6 +46,7 @@ $ python optuna_hyperopt.py --DATASET dataset_type --NTRIALS 50
 ```
 
 with `dataset_type` as previously defined. You can increase `NTRIALS` to search for more solutions. Pruning is activated, so not-promising trials will be stopped early. To look at the results, we use optuna-dashboard, see the [documentation of Optuna](https://optuna.readthedocs.io/en/stable/index.html).
+
 
 ### Result compilation
 
@@ -56,6 +60,7 @@ $ python compile_runs.py --PATH OUTPUT_PATH --DATASET dataset_type
 
 with `OUTPUT_PATH` and `dataset_type` as previously defined for training.
 
+
 ### Observing predictions
 
 The [`plot_prediction.ipynb`](plot_prediction.ipynb) notebook contains visualization examples showing model predictions for different datasets. It demonstrates how to:
@@ -63,6 +68,7 @@ The [`plot_prediction.ipynb`](plot_prediction.ipynb) notebook contains visualiza
 - Generate multi-step forecasts on test data  
 - Plot observed vs predicted time series with forecast horizons
 - Compare performance across different feature types
+
 
 ## Model Architectures
 
@@ -75,12 +81,14 @@ The repository implements six different forecasting models:
 5. **LSTM**: Long Short-Term Memory recurrent network
 6. **Transformer**: Autoregressive transformer with positional encoding
 
+
 ## Evaluation Metrics
 
 Models are evaluated using:
 - **R² score**: Coefficient of determination for prediction accuracy
 - **MASE**: Mean Absolute Scaled Error for scale-independent comparison
 - **Peak-weighted RMSE**: Emphasizes errors during high-activity periods
+
 
 ## Key Files
 
@@ -92,6 +100,7 @@ Models are evaluated using:
 - [`compile_runs.py`](compile_runs.py): Aggregates results across multiple runs
 - [`optuna_hyperopt.py`](optuna_hyperopt.py): Hyperparameter optimization
 
+
 ## Usage Example
 
 ```bash
@@ -102,6 +111,7 @@ python train.py --PATH ./models_gnss --DATASET gnss
 python compile_runs.py --PATH ./models_gnss --DATASET gnss
 ```
 
+
 ## Requirements
 
 - Python 3.8+
@@ -111,6 +121,7 @@ python compile_runs.py --PATH ./models_gnss --DATASET gnss
 - matplotlib
 - optuna (for hyperparameter tuning)
 - openpyxl (for Excel file reading)
+
 
 ## License
 
